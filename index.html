@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>May Auto Editor V2</title>
+<title>May Auto Editor V3</title>
 
 <style>
 body {
-    font-family: Arial, sans-serif;
-    background: #111;
+    background: #0f0f0f;
     color: white;
+    font-family: Arial, sans-serif;
     text-align: center;
     padding: 20px;
 }
@@ -19,49 +19,40 @@ body {
     margin: auto;
 }
 
-video {
+canvas {
     width: 100%;
-    margin-top: 20px;
     border-radius: 10px;
+    margin-top: 20px;
+    background: black;
 }
 
 button {
-    padding: 10px 20px;
+    padding: 12px 20px;
     margin: 10px;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
 }
 
-.primary {
-    background: #00c853;
-    color: white;
-}
+.primary { background: #00c853; color: white; }
+.danger { background: #d50000; color: white; }
 
-.danger {
-    background: #d50000;
-    color: white;
-}
-
-input {
-    margin-top: 15px;
-}
 </style>
 </head>
-
 <body>
 
 <div class="container">
-    <h1>🎬 May Auto Editor V2</h1>
+    <h1>🎬 May Auto Editor V3</h1>
+    <p>Chuyển ảnh thành video quay như thật</p>
 
-    <input type="file" id="videoInput" accept="video/*">
+    <input type="file" id="imageInput" accept="image/*">
 
-    <video id="videoPlayer" controls></video>
+    <canvas id="canvas"></canvas>
 
     <div>
-        <button class="primary" onclick="trimVideo()">Cắt 5 giây đầu</button>
-        <button class="danger" onclick="resetVideo()">Reset</button>
+        <button class="primary" onclick="startRender()">Tạo Video</button>
+        <button class="danger" onclick="downloadVideo()">Tải Video</button>
     </div>
 
     <p id="status"></p>
@@ -69,36 +60,95 @@ input {
 
 <script>
 
-let originalURL = null;
+let img = new Image();
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
+let animationFrame;
+let recorder;
+let chunks = [];
+let recordedBlob;
 
-const videoInput = document.getElementById("videoInput");
-const videoPlayer = document.getElementById("videoPlayer");
-const statusText = document.getElementById("status");
-
-videoInput.addEventListener("change", function(event) {
-    const file = event.target.files[0];
+document.getElementById("imageInput").addEventListener("change", function(e) {
+    const file = e.target.files[0];
     if (file) {
-        originalURL = URL.createObjectURL(file);
-        videoPlayer.src = originalURL;
-        statusText.innerText = "Video đã tải lên thành công!";
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+            canvas.width = 720;
+            canvas.height = 1280;
+            drawFrame(0);
+            document.getElementById("status").innerText = "Ảnh đã tải.";
+        };
     }
 });
 
-function trimVideo() {
-    if (!videoPlayer.src) {
-        alert("Vui lòng tải video trước!");
+function drawFrame(progress) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let scale = 1 + progress * 0.3; // zoom nhẹ
+    let offsetX = progress * 100;   // pan ngang
+
+    let imgWidth = img.width * scale;
+    let imgHeight = img.height * scale;
+
+    ctx.drawImage(
+        img,
+        -offsetX,
+        0,
+        imgWidth,
+        imgHeight
+    );
+}
+
+function startRender() {
+
+    if (!img.src) {
+        alert("Vui lòng chọn ảnh trước!");
         return;
     }
 
-    videoPlayer.currentTime = 5;
-    statusText.innerText = "Đã bỏ 5 giây đầu (giả lập).";
+    chunks = [];
+    const stream = canvas.captureStream(30);
+    recorder = new MediaRecorder(stream);
+
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = () => {
+        recordedBlob = new Blob(chunks, { type: "video/webm" });
+        document.getElementById("status").innerText = "Video đã tạo xong!";
+    };
+
+    recorder.start();
+
+    let duration = 10; // 10 giây
+    let fps = 30;
+    let totalFrames = duration * fps;
+    let currentFrame = 0;
+
+    function animate() {
+        let progress = currentFrame / totalFrames;
+        drawFrame(progress);
+        currentFrame++;
+
+        if (currentFrame < totalFrames) {
+            animationFrame = requestAnimationFrame(animate);
+        } else {
+            recorder.stop();
+        }
+    }
+
+    animate();
 }
 
-function resetVideo() {
-    if (originalURL) {
-        videoPlayer.src = originalURL;
-        statusText.innerText = "Đã reset video.";
+function downloadVideo() {
+    if (!recordedBlob) {
+        alert("Chưa tạo video!");
+        return;
     }
+
+    const url = URL.createObjectURL(recordedBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "may-auto-editor-v3.webm";
+    a.click();
 }
 
 </script>
