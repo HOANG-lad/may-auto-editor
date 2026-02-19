@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>May Auto Editor</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0f0f0f;
+    color:white;
+    text-align:center;
+}
+h1{
+    margin-top:30px;
+}
+button{
+    background:#00c853;
+    border:none;
+    padding:15px;
+    width:90%;
+    margin:15px 0;
+    font-size:18px;
+    border-radius:10px;
+    color:white;
+}
+input{
+    margin:20px 0;
+}
+#preview img{
+    width:100%;
+    margin-top:10px;
+    border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>MAY AUTO EDITOR</h1>
+<p>Tạo video tự động từ ảnh của bạn</p>
+
+<input type="file" id="images" accept="image/*" multiple>
+
+<div id="preview"></div>
+
+<button onclick="createVideo()">TẠO VIDEO</button>
+
+<script>
+function createVideo(){
+    alert("Version 1 hoạt động! Bước tiếp theo sẽ xuất video thật.");
+}
+
+document.getElementById("images").addEventListener("change", function(event){
+    let preview = document.getElementById("preview");
+    preview.innerHTML="";
+    let files = event.target.files;
+
+    for(let i=0;i<files.length;i++){
+        let reader = new FileReader();
+        reader.onload = function(e){
+            let img = document.createElement("img");
+            img.src = e.target.result;
+            preview.appendChild(img);
+        }
+        reader.readAsDataURL(files[i]);
+    }
+});
+</script>
+
+</body>
+</html>
