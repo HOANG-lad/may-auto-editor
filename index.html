@@ -1,73 +1,106 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>May Auto Editor</title>
+<title>May Auto Editor V2</title>
 
 <style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#0f0f0f;
-    color:white;
-    text-align:center;
+body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    text-align: center;
+    padding: 20px;
 }
-h1{
-    margin-top:30px;
+
+.container {
+    max-width: 600px;
+    margin: auto;
 }
-button{
-    background:#00c853;
-    border:none;
-    padding:15px;
-    width:90%;
-    margin:15px 0;
-    font-size:18px;
-    border-radius:10px;
-    color:white;
+
+video {
+    width: 100%;
+    margin-top: 20px;
+    border-radius: 10px;
 }
-input{
-    margin:20px 0;
+
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
 }
-#preview img{
-    width:100%;
-    margin-top:10px;
-    border-radius:10px;
+
+.primary {
+    background: #00c853;
+    color: white;
+}
+
+.danger {
+    background: #d50000;
+    color: white;
+}
+
+input {
+    margin-top: 15px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>MAY AUTO EDITOR</h1>
-<p>Tạo video tự động từ ảnh của bạn</p>
+<div class="container">
+    <h1>🎬 May Auto Editor V2</h1>
 
-<input type="file" id="images" accept="image/*" multiple>
+    <input type="file" id="videoInput" accept="video/*">
 
-<div id="preview"></div>
+    <video id="videoPlayer" controls></video>
 
-<button onclick="createVideo()">TẠO VIDEO</button>
+    <div>
+        <button class="primary" onclick="trimVideo()">Cắt 5 giây đầu</button>
+        <button class="danger" onclick="resetVideo()">Reset</button>
+    </div>
+
+    <p id="status"></p>
+</div>
 
 <script>
-function createVideo(){
-    alert("Version 1 hoạt động! Bước tiếp theo sẽ xuất video thật.");
-}
 
-document.getElementById("images").addEventListener("change", function(event){
-    let preview = document.getElementById("preview");
-    preview.innerHTML="";
-    let files = event.target.files;
+let originalURL = null;
 
-    for(let i=0;i<files.length;i++){
-        let reader = new FileReader();
-        reader.onload = function(e){
-            let img = document.createElement("img");
-            img.src = e.target.result;
-            preview.appendChild(img);
-        }
-        reader.readAsDataURL(files[i]);
+const videoInput = document.getElementById("videoInput");
+const videoPlayer = document.getElementById("videoPlayer");
+const statusText = document.getElementById("status");
+
+videoInput.addEventListener("change", function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        originalURL = URL.createObjectURL(file);
+        videoPlayer.src = originalURL;
+        statusText.innerText = "Video đã tải lên thành công!";
     }
 });
+
+function trimVideo() {
+    if (!videoPlayer.src) {
+        alert("Vui lòng tải video trước!");
+        return;
+    }
+
+    videoPlayer.currentTime = 5;
+    statusText.innerText = "Đã bỏ 5 giây đầu (giả lập).";
+}
+
+function resetVideo() {
+    if (originalURL) {
+        videoPlayer.src = originalURL;
+        statusText.innerText = "Đã reset video.";
+    }
+}
+
 </script>
 
 </body>
